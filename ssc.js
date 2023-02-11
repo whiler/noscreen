@@ -92,7 +92,7 @@
 		return conn;
 	}
 
-	function logger(path) {
+	function initlogger(path) {
 		var node = doc.querySelector(path);
 		logging = {
 			log: function(level, msg) {
@@ -123,98 +123,20 @@
 	}
 	// }}}
 
-	function control(sock, conn, path) {
+	function sharestream(sock, conn, stream) {
 		return new Promise((resolve, reject) => {
-			var video = doc.querySelector(path),
-				requirements = 2;
-			conn.addEventListener('track', (e) => {
-				logging.trace('received track');
-				if (e.streams.length > 0) {
-					video.srcObject = e.streams[0];
-					video.play();
-					requirements--;
-					if (requirements <= 0) {
-						resolve();
-					}
-				}
-				return false;
-			}, false);
-			conn.addEventListener('datachannel', (e) => {
-				logging.trace('received datachannel');
-				var channel = e.channel;
-				if (channel.label == label) {
-					channel.addEventListener('open', (e) => {
-						doc.addEventListener('keydown', (e) => {
-							logging.trace('sending keydown');
-							channel.send(JSON.stringify({l:1, t: 1, k: e.keyCode}));
-							return false;
-						}, false);
-						doc.addEventListener('keypress', (e) => {
-							logging.trace('sending keypress');
-							channel.send(JSON.stringify({l:1, t: 2, k: e.keyCode}));
-							return false;
-						}, false);
-						doc.addEventListener('keyup', (e) => {
-							logging.trace('sending keyup');
-							channel.send(JSON.stringify({l:1, t: 3, k: e.keyCode}));
-							return false;
-						}, false);
-
-						video.addEventListener('mousemove', (e) => {
-							var rect = video.getBoundingClientRect();
-							logging.trace('sending mousemove');
-							channel.send(JSON.stringify({
-								l: 2,
-								t: 1,
-								s: {w: Math.round(rect.width), h: Math.round(rect.height)},
-								p: {l: Math.round(e.clientX - rect.left), t: Math.round(e.clientY - rect.top)}
-							}));
-							return false;
-						}, false);
-						video.addEventListener('mousedown', (e) => {
-							logging.trace('sending mousedown');
-							channel.send(JSON.stringify({
-								l: 2,
-								t: 2,
-								k: e.button,
-							}));
-							return false;
-						}, false);
-						requirements--;
-						if (requirements <= 0) {
-							resolve();
-						}
-						return false;
-					}, false);
-				}
-				return false;
-			}, false);
-		});
-	}
-
-	function share(sock, conn, stream, actor) {
-		return new Promise((resolve, reject) => {
-			var channel = conn.createDataChannel(label);
-			channel.addEventListener('open', (e) => {
-				logging.trace('command channel is opened');
-				return false;
-			}, false);
-			channel.addEventListener('close', (e) => {
-				logging.trace('command channel is closed');
-				return false;
-			}, false);
-			channel.addEventListener('message', (e) => {
-				logging.trace('forward a command from channel to actor');
-				actor.send(e.data);
-				return false;
-			}, false);
+			var promised = false;
 			stream.getTracks().forEach(track => {
 				conn.addTrack(track, stream)
 				track.addEventListener('ended', (e) => {
-					reject(new Error('User ended'));
+					if (!promised) {
+						promised = true;
+						reject(new Error('User ended'));
+					}
+					return false;
 				}, false);
 			});
-			conn.createOffer().then((offer)=>{
+			conn.createOffer().then((offer) => {
 				conn.setLocalDescription(offer).then(() => {
 					var offers = JSON.stringify(offer);
 					logging.trace('sending offer ' + offers);
@@ -224,12 +146,27 @@
 			conn.addEventListener('connectionstatechange', (e) => {
 				switch (conn.connectionState) {
 				case 'connected':
-					resolve(channel);
+					if (!promised) {
+						promised = true;
+						resolve();
+					}
 					break;
-				case 'failed':
-					reject(new Error('RTCPeerConnection connect failed'));
-					break
 				}
+			}, false);
+		});
+	}
+
+	function display(sock, conn, path) {
+		return new Promise((resolve, reject) => {
+			conn.addEventListener('track', (e) => {
+				logging.trace('received track');
+				if (e.streams.length > 0) {
+					var video = doc.querySelector(path),
+					video.srcObject = e.streams[0];
+					video.play();
+					resolve();
+				}
+				return false;
 			}, false);
 		});
 	}
@@ -245,8 +182,9 @@
 				addr: '#advanced .signal input[name=addr]',
 				token: '#advanced .signal input[name=token]'
 			};
-		logger('#logging');
+		initlogger('#logging');
 		doc.querySelector('#main .local input[name=id]').value = randoms('', 4);
+
 		// 共享
 		doc.querySelector('#main .local').addEventListener('submit', (e) => {
 			e.preventDefault();
@@ -254,92 +192,65 @@
 				video: {
 					width: screen.width,
 					height: screen.height,
-					frameRate: {ideal: 10, max: 15},
+					frameRate: {ideal: 12, max: 20},
 					cursor: 'always',
 					displaySurface: 'monitor'
 				},
 				audio: false
 			};
-			navigator.mediaDevices.getDisplayMedia(constraints).then(
-				(stream) => {
-					logging.info('display media stream(' + stream.id + ') is ready');
-					stream.getTracks().forEach((track) => {
-						switch (track.kind) {
-						case 'video':
-							var settings = track.getSettings();
-							logging.debug('video(' + track.id + ') is ' + settings.width + 'x' +  settings.height + '@' + settings.frameRate);
-							break;
-						}
+			navigator.mediaDevices.getDisplayMedia(constraints).then((stream) => {
+				logging.info('display media stream(' + stream.id + ') is ready');
+				stream.getTracks().forEach((track) => {
+					switch (track.kind) {
+					case 'video':
+						var settings = track.getSettings();
+						logging.debug('video(' + track.id + ') is ' + settings.width + 'x' +  settings.height + '@' + settings.frameRate);
+						break;
+					}
+				});
+				signal(signalcfg, doc.querySelector('#main .local input[name=id]').value, doc.querySelector('#main .remote input[name=id]').value).then((sock) => {
+					logging.info('signal is ready');
+					var conn = initialize(turncfg, sock);
+					sharestream(sock, conn, stream).then(() => {
+						logging.info('screen is being share');
+						return false;
+					}, (reason) => {
+						logging.warn(reason);
+						conn.close();
+						sock.close();
+						stream.getTracks().forEach((track) => { track.stop(); });
+						return false;
 					});
-					signal(signalcfg, doc.querySelector('#main .local input[name=id]').value).then(
-						(sock) => {
-							logging.info('signal is ready');
-							socket(doc.querySelector('#advanced .actor input[name=addr]').value).then(
-								(actor) => {
-									logging.info('actor is ready');
-									var conn = initialize(turncfg, sock);
-									share(sock, conn, stream, actor).then(
-										(channel) => {
-											logging.info('sharing');
-										},
-										(reason) => {
-											logging.error(reason);
-											conn.close();
-											actor.close();
-											sock.close();
-											stream.getTracks().forEach((track) => { track.stop(); });
-											return false;
-										}
-									);
-									return false;
-								},
-								(reason) => {
-									logging.error(reason);
-									sock.close();
-									stream.getTracks().forEach((track) => { track.stop(); });
-									return false;
-								}
-							);
-							return false;
-						},
-						(reason) => {
-							logging.error(reason);
-							stream.getTracks().forEach((track) => { track.stop(); });
-							return false;
-						}
-					);
 					return false;
-				},
-				(reason) => {
-					logging.error(reason);
+				}, (reason) => {
+					logging.warn(reason);
+					stream.getTracks().forEach((track) => { track.stop(); });
 					return false;
-				}
-			);
+				});
+			});
 			return false;
 		}, false);
+
 		// 控制
 		doc.querySelector('#main .remote').addEventListener('submit', (e) => {
 			e.preventDefault();
-			signal(signalcfg, doc.querySelector('#main .remote input[name=id]').value).then(
-				(sock) => {
-					logging.info('signal is ready');
-					control(sock, initialize(turncfg, sock), '#screen video').then(
-						() => {
-							logging.info('controling');
-						},
-						(reason) => {
-							logging.error(reason);
-							sock.close();
-							return false;
-						}
-					);
+			signal(signalcfg, doc.querySelector('#main .remote input[name=id]').value, doc.querySelector('#main .local input[name=id]').value).then((sock) => {
+				logging.info('signal is ready');
+				var conn = initialize(turncfg, sock);
+				display(sock, conn, '#screen video').then(() => {
+					logging.info('displaying remote screen');
 					return false;
-				},
-				(reason) => {
-					logging.error(reason);
+				}, (reason) => {
+					logging.warn(reason);
+					conn.close();
+					sock.close();
 					return false;
-				}
-			);
+				});
+				return false;
+			}, (reason) => {
+				logging.error(reason);
+				return false;
+			});
 			return false;
 		}, false);
 
