@@ -250,7 +250,16 @@
 		// 共享
 		doc.querySelector('#main .local').addEventListener('submit', (e) => {
 			e.preventDefault();
-			var constraints = {video: {cursor: 'always', frameRate: {ideal: 10, max: 15}, displaySurface: 'monitor'}, audio: false};
+			var constraints = {
+				video: {
+					width: screen.width,
+					height: screen.height,
+					frameRate: {ideal: 10, max: 15},
+					cursor: 'always',
+					displaySurface: 'monitor'
+				},
+				audio: false
+			};
 			navigator.mediaDevices.getDisplayMedia(constraints).then(
 				(stream) => {
 					logging.info('display media stream(' + stream.id + ') is ready');
