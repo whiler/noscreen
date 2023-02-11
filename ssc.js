@@ -1,4 +1,5 @@
 (function(win, doc) {
+	// {{{ common
 	var logging = console,
 		label = 'cmd';
 
@@ -12,76 +13,115 @@
 		return s;
 	}
 
-	function initialize(turncfg, sock) {
+	function socket(addr) {
 		return new Promise((resolve, reject) => {
-			var cfg = {iceServers: [{urls: ['stun:stun.l.google.com:19302', 'stun:stun.qq.com:3478']}]},
-				conn = null,
-				turn = doc.querySelector(turncfg.turn).value,
-				username = doc.querySelector(turncfg.username).value,
-				credential = doc.querySelector(turncfg.credential).value;
-
-			if (turn.startsWith('stun')) {
-				cfg.iceServers.push({urls: [turn]});
-			} else if (turn.startsWith('turn') && username != '' && credential != '') {
-				cfg.iceServers.push({urls: [turn], username: username, credential: credential});
-			} else if (turn) {
-				logging.debug('ignore turn ' + turn);
-			}
-
-			conn = new RTCPeerConnection(cfg);
-			conn.addEventListener('connectionstatechange', (e) => {
-				logging.trace('connectionState is ' + conn.connectionState);
-				switch (conn.connectionState) {
-				case 'connected':
-					resolve(conn);
-					break;
-				case 'failed':
-					reject(new Error('RTCPeerConnection failed'));
-					break;
-				}
+			var sock = new WebSocket(addr);
+			sock.addEventListener('open', (e) => {
+				logging.debug('WebSocket(' + addr + ') is opened');
+				resolve(sock);
 			}, false);
-			conn.addEventListener('icecandidate', (e) => {
-				if (e.candidate) {
-					var candidate = JSON.stringify(e.candidate);
-					logging.trace('sending candidate ' + candidate);
-					sock.send(candidate);
-				}
-				return false;
-			}, false);
-			conn.addEventListener('icecandidateerror', (e) => {logging.error(e);}, false);
-			conn.addEventListener('iceconnectionstatechange', (e) => { logging.trace('iceConnectionState is ' + conn.iceConnectionState); }, false);
-			conn.addEventListener('icegatheringstatechange', (e) => { logging.trace('iceGatheringState is ' + conn.iceGatheringState); }, false);
-			conn.addEventListener('negotiationneeded', (e) => { logging.trace(e); }, false);
-			conn.addEventListener('signalingstatechange', (e) => { logging.trace('signalingState is ' + conn.signalingState); }, false);
-
-			sock.addEventListener('message', (e) => {
-				var msg = JSON.parse(e.data);
-				if (msg.type == 'offer') {
-					logging.trace('received offer ' + e.data);
-					conn.setRemoteDescription(msg).then(() => {
-						conn.createAnswer().then((answer)=>{
-							conn.setLocalDescription(answer).then(() => {
-								var answers = JSON.stringify(answer);
-								logging.trace('sending answer ' + answers);
-								sock.send(answers);
-							});
-						});
-					});
-				} else if (msg.type == 'answer') {
-					logging.trace('received answer ' + e.data);
-					conn.setRemoteDescription(msg);
-				} else if (msg.candidate != undefined) {
-					logging.trace('received candidate ' + e.data);
-					conn.addIceCandidate(msg);
-				} else {
-					logging.trace(e.data);
-				}
-				return false;
-			}, false);
-
-			logging.debug('RTCPeerConnection is initialized with ' + JSON.stringify(cfg));
+			sock.addEventListener('error', (e) => { reject(new Error('WebSocket(' + addr + ') error')); }, false);
+			sock.addEventListener('close', (e) => { logging.debug('WebSocket(' + addr + ') is closed'); }, false);
 		});
 	}
+
+	function signal(cfg, src, dst) {
+		var u = new URL(doc.querySelector(cfg.addr).value);
+		u.pathname += u.pathname.endsWith('/') ? src : '/' + src;
+		u.searchParams.append('token', doc.querySelector(cfg.token).value);
+		return socket(u.toString());
+	}
+
+	function initialize(turncfg, sock) {
+		var cfg = {iceServers: [{urls: ['stun:stun.l.google.com:19302', 'stun:stun.qq.com:3478']}]},
+			conn = null,
+			addr = doc.querySelector(addrcfg.addr).value,
+			username = doc.querySelector(turncfg.username).value,
+			credential = doc.querySelector(turncfg.credential).value;
+
+		if (addr.startsWith('stun')) {
+			cfg.iceServers.push({urls: [addr]});
+		} else if (addr.startsWith('turn') && username != '' && credential != '') {
+			cfg.iceServers.push({urls: [addr], username: username, credential: credential});
+		} else if (turn) {
+			logging.warn('ignore stun/turn ' + addr);
+		}
+
+		conn = new RTCPeerConnection(cfg);
+		conn.addEventListener('connectionstatechange', (e) => { logging.info('connectionState is ' + conn.connectionState); return false; }, false);
+		conn.addEventListener('negotiationneeded', (e) => { logging.trace(e); }, false);
+		conn.addEventListener('signalingstatechange', (e) => { logging.info('signalingState is ' + conn.signalingState); }, false);
+		conn.addEventListener('icecandidateerror', (e) => {logging.error(e);}, false);
+		conn.addEventListener('iceconnectionstatechange', (e) => { logging.info('iceConnectionState is ' + conn.iceConnectionState); }, false);
+		conn.addEventListener('icegatheringstatechange', (e) => { logging.info('iceGatheringState is ' + conn.iceGatheringState); }, false);
+		conn.addEventListener('icecandidate', (e) => {
+			if (e.candidate) {
+				var candidate = JSON.stringify(e.candidate);
+				logging.trace('sending candidate ' + candidate);
+				sock.send(candidate);
+			}
+			return false;
+		}, false);
+
+		sock.addEventListener('message', (e) => {
+			var msg = JSON.parse(e.data);
+			if (msg.type == 'offer') {
+				logging.trace('received offer ' + e.data);
+				conn.setRemoteDescription(msg).then(() => {
+					conn.createAnswer().then((answer)=>{
+						conn.setLocalDescription(answer).then(() => {
+							var answers = JSON.stringify(answer);
+							logging.trace('sending answer ' + answers);
+							sock.send(answers);
+						});
+					});
+				});
+			} else if (msg.type == 'answer') {
+				logging.trace('received answer ' + e.data);
+				conn.setRemoteDescription(msg);
+			} else if (msg.candidate != undefined) {
+				logging.trace('received candidate ' + e.data);
+				conn.addIceCandidate(msg);
+			} else {
+				logging.trace(e.data);
+			}
+			return false;
+		}, false);
+
+		logging.debug('RTCPeerConnection is initialized with ' + JSON.stringify(cfg));
+		return conn;
+	}
+
+	function logger(path) {
+		var node = doc.querySelector(path);
+		logging = {
+			log: function(level, msg) {
+				var p = doc.createElement('p');
+				p.className = level;
+				p.innerHTML = '<time>' + (new Date()).toLocaleTimeString() + '</time><i>' + msg + '</i>';
+				node.appendChild(p);
+				return false;
+			},
+			debug: function(msg) {
+				return this.log('debug', msg);
+			},
+			error: function(msg) {
+				console.error(msg);
+				return this.log('error', msg);
+			},
+			info: function(msg) {
+				return this.log('info', msg);
+			},
+			trace: function(msg) {
+				return this.log('trace', msg);
+			},
+			warn: function(msg) {
+				return this.log('warn', msg);
+			},
+		};
+		return false;
+	}
+	// }}}
 
 	function control(sock, conn, path) {
 		return new Promise((resolve, reject) => {
@@ -194,61 +234,18 @@
 		});
 	}
 
-	function socket(addr) {
-		return new Promise((resolve, reject) => {
-			var sock = new WebSocket(addr);
-			sock.addEventListener('open', (e) => {
-				logging.debug('WebSocket('+addr+') is opened');
-				resolve(sock);
-			}, false);
-			sock.addEventListener('error', (e) => { reject(new Error('WebSocket('+addr+') error')); }, false);
-			sock.addEventListener('close', (e) => { logging.debug('WebSocket('+addr+') is closed'); }, false);
-		});
-	}
-
-	function signal(cfg, id) {
-		var u = new URL(doc.querySelector(cfg.signal).value);
-		u.pathname += u.pathname.endsWith('/') ? id : '/' + id;
-		u.searchParams.append('token', doc.querySelector(cfg.token).value);
-		return socket(u.toString());
-	}
-
 	function bootstrap() {
 		var shareState = 0,
 			turncfg = {
-				turn: '#advanced .turn input[name=turn]',
+				addr: '#advanced .turn input[name=addr]',
 				username: '#advanced .turn input[name=username]',
 				credential: '#advanced .turn input[name=credential]'
 			},
 			signalcfg = {
-				signal: '#advanced .signal input[name=signal]',
+				addr: '#advanced .signal input[name=addr]',
 				token: '#advanced .signal input[name=token]'
-			},
-			logger = doc.querySelector('#logging');
-		logging = {
-			log: function(level, msg) {
-				var p = doc.createElement('p');
-				p.className = level;
-				p.innerHTML = '<time>' + (new Date()).toLocaleTimeString() + '</time><i>' + msg + '</i>';
-				logger.appendChild(p);
-			},
-			debug: function(msg) {
-				return this.log('debug', msg);
-			},
-			error: function(msg) {
-				console.error(msg);
-				return this.log('error', msg);
-			},
-			info: function(msg) {
-				return this.log('info', msg);
-			},
-			trace: function(msg) {
-				return this.log('trace', msg);
-			},
-			warn: function(msg) {
-				return this.log('warn', msg);
-			},
-		};
+			};
+		logger('#logging');
 		doc.querySelector('#main .local input[name=id]').value = randoms('', 4);
 		// 共享
 		doc.querySelector('#main .local').addEventListener('submit', (e) => {
@@ -256,11 +253,19 @@
 			var constraints = {video: {cursor: 'always', frameRate: {ideal: 10, max: 15}, displaySurface: 'monitor'}, audio: false};
 			navigator.mediaDevices.getDisplayMedia(constraints).then(
 				(stream) => {
-					logging.info('display media stream is ready');
+					logging.info('display media stream(' + stream.id + ') is ready');
+					stream.getTracks().forEach((track) => {
+						switch (track.kind) {
+						case 'video':
+							var settings = track.getSettings();
+							logging.debug('video(' + track.id + ') = ' + settings.width + 'x' +  settings.height + '@' + settings.frameRate);
+							break;
+						}
+					});
 					signal(signalcfg, doc.querySelector('#main .local input[name=id]').value).then(
 						(sock) => {
 							logging.info('signal is ready');
-							socket(doc.querySelector('#advanced .actor input[name=actor]').value).then(
+							socket(doc.querySelector('#advanced .actor input[name=addr]').value).then(
 								(actor) => {
 									var conn = initialize(turncfg, sock);
 									logging.info('actor is ready');
