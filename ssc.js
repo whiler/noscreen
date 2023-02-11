@@ -245,8 +245,8 @@
 								evt = {
 									l: 2,
 									t: 1,
-									s: {w: rect.width, h: rect.height},
-									p: {l: e.clientX - rect.left, t: e.clientY - rect.top}
+									s: {w: Math.round(rect.width), h: Math.round(rect.height)},
+									p: {l: Math.round(e.clientX - rect.left), t: Math.round(e.clientY - rect.top)}
 								};
 							logging.trace('sending mousemove event');
 							channel.send(JSON.stringify(evt));
