@@ -140,11 +140,12 @@
 				track.addEventListener('ended', (e) => {
 					if (!promised) {
 						promised = true;
-						reject(new Error('User ended'));
+						reject(new Error('user ended'));
 					}
 					return false;
 				}, false);
 			});
+			sync(sock, conn);
 			conn.addEventListener('iceconnectionstatechange', (e) => {
 				switch (conn.iceConnectionState) {
 				case 'connected':
@@ -156,37 +157,47 @@
 				case 'failed':
 					if (!promised) {
 						promised = true;
-						reject(new Error('RTCPeerConnection connect failed'));
+						reject(new Error('RTCPeerConnection iceconnect failed'));
 					}
 				}
 			}, false);
-			sync(sock, conn);
 		});
 	}
 
 	function display(sock, conn, path) {
 		return new Promise((resolve, reject) => {
-			var promised = false;
+			var promised = false,
+				videoReady = false,
+				connectionReady = false;
 			conn.addEventListener('track', (e) => {
 				logging.trace('received track');
-				if (!promised && e.streams.length > 0) {
-					promised = true;
+				if (e.streams.length > 0) {
 					var video = doc.querySelector(path);
 					video.srcObject = e.streams[0];
 					video.play();
-					resolve(video);
+					videoReady = true;
+					if (!promised && connectionReady) {
+						promised = true;
+						resolve();
+					}
 				}
 				return false;
 			}, false);
 			conn.addEventListener('iceconnectionstatechange', (e) => {
 				switch (conn.iceConnectionState) {
+				case 'connected':
+					connectionReady = true;
+					if (!promised && videoReady) {
+						promised = true;
+						resolve();
+					}
+					break;
 				case 'failed':
 					if (!promised) {
 						promised = true;
-						reject(new Error('RTCPeerConnection connect failed'));
+						reject(new Error('RTCPeerConnection iceconnect failed'));
 					}
 				}
-				return false;
 			}, false);
 		});
 	}
