@@ -256,6 +256,7 @@
 					}, false);
 					doc.addEventListener('keypress', (e) => {
 						if (sharing) {
+							e.preventDefault();
 							var evt = {
 									l: 1,
 									t: 2,
