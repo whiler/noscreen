@@ -120,47 +120,55 @@
 		};
 		return false;
 	}
-
-	function sync(sock, conn) {
-		conn.createOffer().then((offer) => {
-			conn.setLocalDescription(offer).then(() => {
-				var offers = JSON.stringify(offer);
-				logging.trace('sending offer ' + offers);
-				sock.send(offers);
-			});
-		});
-	}
 	// }}}
 	// {{{ 图传
-	function sharestream(sock, conn, stream) {
+	function sharestream(sock, conn, stream, label) {
 		return new Promise((resolve, reject) => {
-			var promised = false;
+			var promised = false,
+				channel = conn.createDataChannel(label);
 			stream.getTracks().forEach(track => {
 				conn.addTrack(track, stream)
 				track.addEventListener('ended', (e) => {
 					if (!promised) {
 						promised = true;
+						channel.close();
 						reject(new Error('user ended'));
 					}
 					return false;
 				}, false);
 			});
-			sync(sock, conn);
+			channel.addEventListener('open', (e) => { logging.info('datachannel ' + label + ' is opened'); return false; }, false);
+			channel.addEventListener('close', (e) => { logging.info('datachannel ' + label + ' is closed'); return false; }, false);
 			conn.addEventListener('iceconnectionstatechange', (e) => {
 				switch (conn.iceConnectionState) {
 				case 'connected':
 					if (!promised) {
 						promised = true;
-						resolve();
+						resolve(channel);
 					}
 					break;
 				case 'failed':
 					if (!promised) {
 						promised = true;
+						channel.close();
 						reject(new Error('RTCPeerConnection iceconnect failed'));
 					}
 				}
 			}, false);
+			conn.createOffer().then((offer) => {
+				conn.setLocalDescription(offer).then(() => {
+					var offers = JSON.stringify(offer);
+					logging.trace('sending offer ' + offers);
+					sock.send(offers);
+				});
+			}).catch((err) => {
+				if (!promised) {
+					promised = true;
+					channel.close();
+					reject(err);
+					return false;
+				}
+			});
 		});
 	}
 
@@ -233,7 +241,6 @@
 				}
 				return false;
 			}, false);
-			sync(sock, conn);
 		});
 	}
 
@@ -321,7 +328,7 @@
 				signal(signalcfg, doc.querySelector('#main .local input[name=id]').value, doc.querySelector('#main .remote input[name=id]').value).then((sock) => {
 					logging.info('signal is ready');
 					var conn = initialize(turncfg, sock);
-					sharestream(sock, conn, stream).then(() => {
+					sharestream(sock, conn, stream, 'cmd').then((channel) => {
 						logging.info('screen is being share');
 						return false;
 					}, (reason) => {
