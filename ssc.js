@@ -186,7 +186,7 @@
 					videoReady = true;
 					if (!promised && connectionReady) {
 						promised = true;
-						resolve();
+						resolve(video);
 					}
 				}
 				return false;
@@ -197,7 +197,7 @@
 					connectionReady = true;
 					if (!promised && videoReady) {
 						promised = true;
-						resolve();
+						resolve(video);
 					}
 					break;
 				case 'failed':
