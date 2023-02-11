@@ -281,7 +281,7 @@
 								};
 							if (last != 3) {
 								last = 3;
-								logging.trace('sending keypress event');
+								logging.trace('sending keyup event');
 							}
 							channel.send(JSON.stringify(evt));
 						}
