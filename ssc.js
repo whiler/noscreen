@@ -237,10 +237,19 @@
 						}
 						return false;
 					}, false);
+
 					video.addEventListener('mousemove', (e) => {
 						if (sharing) {
+							e.preventDefault();
+							var rect = video.getBoundingClientRect(),
+								evt = {
+									l: 2,
+									t: 1,
+									s: {w: rect.width, h: rect.height},
+									p: {l: e.clientX - rect.left, t: e.clientY - rect.top}
+								};
 							logging.trace('sending mousemove event');
-							channel.send('{}');
+							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
