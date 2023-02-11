@@ -176,11 +176,11 @@
 		return new Promise((resolve, reject) => {
 			var promised = false,
 				videoReady = false,
-				connectionReady = false;
+				connectionReady = false,
+				video = doc.querySelector(path);
 			conn.addEventListener('track', (e) => {
 				logging.trace('received track');
 				if (e.streams.length > 0) {
-					var video = doc.querySelector(path);
 					video.srcObject = e.streams[0];
 					video.play();
 					videoReady = true;
