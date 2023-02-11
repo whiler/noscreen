@@ -238,6 +238,7 @@
 						return false;
 					}, false);
 
+					video.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; }, false);
 					video.addEventListener('mousemove', (e) => {
 						if (sharing) {
 							e.preventDefault();
