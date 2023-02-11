@@ -161,7 +161,7 @@
 			conn.addEventListener('track', (e) => {
 				logging.trace('received track');
 				if (e.streams.length > 0) {
-					var video = doc.querySelector(path),
+					var video = doc.querySelector(path);
 					video.srcObject = e.streams[0];
 					video.play();
 					resolve();
