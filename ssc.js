@@ -267,6 +267,20 @@
 						}
 						return false;
 					}, false);
+					video.addEventListener('mouseup', (e) => {
+						if (sharing) {
+							e.preventDefault();
+							var rect = video.getBoundingClientRect(),
+								evt = {
+									l: 2,
+									t: 3,
+									k: e.button,
+								};
+							logging.trace('sending mouseup event');
+							channel.send(JSON.stringify(evt));
+						}
+						return false;
+					}, false);
 				}
 			}, false);
 		});
