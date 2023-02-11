@@ -239,6 +239,7 @@
 					}, false);
 
 					video.addEventListener('keydown', (e) => {
+						logging.trace('keydown');
 						if (sharing) {
 							e.preventDefault();
 							var evt = {
