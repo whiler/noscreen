@@ -1,7 +1,6 @@
 (function(win, doc) {
 	// {{{ common
-	var logging = console,
-		label = 'cmd';
+	var logging = console;
 
 	function randoms(prefix, size) {
 		var chars = '0123456789',
@@ -121,8 +120,18 @@
 		};
 		return false;
 	}
-	// }}}
 
+	function sync(sock, conn) {
+		conn.createOffer().then((offer) => {
+			conn.setLocalDescription(offer).then(() => {
+				var offers = JSON.stringify(offer);
+				logging.trace('sending offer ' + offers);
+				sock.send(offers);
+			});
+		});
+	}
+	// }}}
+	// {{{ 图传
 	function sharestream(sock, conn, stream) {
 		return new Promise((resolve, reject) => {
 			var promised = false;
@@ -136,13 +145,6 @@
 					return false;
 				}, false);
 			});
-			conn.createOffer().then((offer) => {
-				conn.setLocalDescription(offer).then(() => {
-					var offers = JSON.stringify(offer);
-					logging.trace('sending offer ' + offers);
-					sock.send(offers);
-				});
-			});
 			conn.addEventListener('iceconnectionstatechange', (e) => {
 				switch (conn.iceConnectionState) {
 				case 'connected':
@@ -153,6 +155,7 @@
 					break;
 				}
 			}, false);
+			sync(sock, conn);
 		});
 	}
 
@@ -164,12 +167,91 @@
 					var video = doc.querySelector(path);
 					video.srcObject = e.streams[0];
 					video.play();
-					resolve();
+					resolve(video);
 				}
 				return false;
 			}, false);
 		});
 	}
+	// }}}
+	// {{{ 指令
+	function shareevents(sock, conn, label, video) {
+		return new Promise((resolve, reject) => {
+			var promised = false,
+				sharing = false,
+				channel = conn.createDataChannel(label);
+			channel.addEventListener('open', (e) => {
+				logging.info('datachannel ' + label + ' is opened');
+				sharing = true;
+				if (!promised) {
+					promised = true;
+					video.addEventListener('mousemove', (e) => {
+						if (sharing) {
+							logging.trace('sending mousemove event');
+							channel.send('{}');
+						}
+						return false;
+					}, false);
+					resolve();
+				}
+				return false;
+			}, false);
+			channel.addEventListener('close', (e) => {
+				logging.info('datachannel ' + label + ' is closed');
+				sharing = false;
+				if (!promised) {
+					promised = true;
+					reject();
+				}
+				return false;
+			}, false);
+			sync(sock, conn);
+		});
+	}
+
+	function forwardevents(sock, conn, label, addr) {
+		return new Promise((resolve, reject) => {
+			conn.addEventListener('datachannel', (e) => {
+				logging.debug('received datachannel ' + e.channel.label);
+				if (e.channel.label == label) {
+					var channel = e.channel;
+					channel.addEventListener('open', (e) => {
+						logging.info('datachannel ' + label + ' is opened');
+						socket(addr).then((actor) => {
+							logging.info('actor is ready');
+							var forwarding = true;
+							actor.addEventListener('close', (e) => {
+								forwarding = false;
+								channel.close();
+								return false;
+							}, false);
+							channel.addEventListener('message', (e) => {
+								if (forwarding) {
+									logging.trace('forwarding a event from actor to channel');
+									actor.send(e.data);
+								}
+								return false;
+							}, false);
+							resolve();
+							return false;
+						}, (reason) => {
+							logging.warn(reason);
+							channel.close();
+							reject(reason);
+							return false;
+						});
+						return false;
+					}, false);
+					channel.addEventListener('close', (e) => {
+						logging.info('datachannel ' + label + ' is closed');
+						return false;
+					}, false);
+				}
+				return false;
+			}, false);
+		});
+	}
+	// }}}
 
 	function bootstrap() {
 		var shareState = 0,
@@ -213,6 +295,13 @@
 					var conn = initialize(turncfg, sock);
 					sharestream(sock, conn, stream).then(() => {
 						logging.info('screen is being share');
+						forwardevents(sock, conn, 'cmd', doc.querySelector('#advanced .actor input[name=addr]').value).then(() => {
+							logging.info('forwarding events');
+							return false;
+						}, (reason) => {
+							logging.warn(reason);
+							return false;
+						});
 						return false;
 					}, (reason) => {
 						logging.warn(reason);
@@ -237,8 +326,17 @@
 			signal(signalcfg, doc.querySelector('#main .remote input[name=id]').value, doc.querySelector('#main .local input[name=id]').value).then((sock) => {
 				logging.info('signal is ready');
 				var conn = initialize(turncfg, sock);
-				display(sock, conn, '#screen video').then(() => {
+				display(sock, conn, '#screen video').then((video) => {
 					logging.info('displaying remote screen');
+					shareevents(sock, conn, 'cmd', video).then(() => {
+						logging.info('keyboard and mouse events are being share');
+						return false;
+					}, (reason) => {
+						logging.warn(reason);
+						conn.close();
+						sock.close();
+						return false;
+					});
 					return false;
 				}, (reason) => {
 					logging.warn(reason);
