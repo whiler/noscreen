@@ -253,6 +253,20 @@
 						}
 						return false;
 					}, false);
+					video.addEventListener('mousedown', (e) => {
+						if (sharing) {
+							e.preventDefault();
+							var rect = video.getBoundingClientRect(),
+								evt = {
+									l: 2,
+									t: 2,
+									k: e.button,
+								};
+							logging.trace('sending mousedown event');
+							channel.send(JSON.stringify(evt));
+						}
+						return false;
+					}, false);
 				}
 			}, false);
 		});
