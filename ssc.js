@@ -143,8 +143,8 @@
 					sock.send(offers);
 				});
 			});
-			conn.addEventListener('connectionstatechange', (e) => {
-				switch (conn.connectionState) {
+			conn.addEventListener('iceconnectionstatechange', (e) => {
+				switch (conn.iceConnectionState) {
 				case 'connected':
 					if (!promised) {
 						promised = true;
