@@ -1,6 +1,43 @@
 (function(win, doc) {
 	// {{{ common
-	var logging = console;
+	var logging = console,
+		keys = {
+			'f1': 'f1',
+			'f2': 'f2',
+			'f3': 'f3',
+			'f4': 'f4',
+			'f5': 'f5',
+			'f6': 'f6',
+			'f7': 'f7',
+			'f8': 'f8',
+			'f9': 'f9',
+			'f10': 'f10',
+			'f11': 'f11',
+			'f12': 'f12',
+			'backspace': 'backspace',
+			'tab': 'tab',
+			'enter': 'enter',
+			'shift': 'shift',
+			'control': 'ctrl',
+			'alt': 'alt',
+			'capslock': 'capslock',
+			'escape': 'esc',
+			' ': 'space',
+			'pageup': 'pageup',
+			'pagedown': 'pagedown',
+			'end': 'end',
+			'home': 'home',
+			'arrowleft': 'left',
+			'arrowup': 'up',
+			'arrowright': 'right',
+			'arrowdown': 'down',
+			'delete': 'delete',
+		},
+		buttons = {
+			0: 'left',
+			1: 'center',
+			2: 'right',
+		};
 
 	function randoms(prefix, size) {
 		var chars = '0123456789',
@@ -119,6 +156,18 @@
 			},
 		};
 		return false;
+	}
+
+	function keyboard(key, code) {
+		if (key.length == 1) {
+			return key
+		} else {
+			return keys[key.toLowerCase()]
+		}
+	}
+
+	function mouse(button) {
+		return buttons[button]
 	}
 	// }}}
 	// {{{ 图传
@@ -242,48 +291,42 @@
 					doc.addEventListener('keydown', (e) => {
 						if (sharing) {
 							e.preventDefault();
-							var evt = {
-									l: 1,
-									t: 1,
-									k: e.keyCode
-								};
-							if (last != 1) {
-								last = 1;
-								logging.trace('sending keydown event');
+							var k = keyboard(e.key, e.code);
+							if (k != undefined) {
+								if (last != 1) {
+									last = 1;
+									logging.trace('sending ' + k + ' keydown event');
+								}
+								channel.send(JSON.stringify({d:1, a:1, k:k}));
 							}
-							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
 					doc.addEventListener('keypress', (e) => {
 						if (sharing) {
 							e.preventDefault();
-							var evt = {
-									l: 1,
-									t: 2,
-									k: e.charCode
-								};
-							if (last != 2) {
-								last = 2
-								logging.trace('sending keypress event');
+							var k = keyboard(e.key, e.code);
+							if (k != undefined) {
+								if (last != 2) {
+									last = 2
+									logging.trace('sending ' + k + ' keypress event');
+								}
+								channel.send(JSON.stringify({d:1, a:2, k:k}));
 							}
-							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
 					doc.addEventListener('keyup', (e) => {
 						if (sharing) {
 							e.preventDefault();
-							var evt = {
-									l: 1,
-									t: 3,
-									k: e.keyCode
-								};
-							if (last != 3) {
-								last = 3;
-								logging.trace('sending keyup event');
+							var k = keyboard(e.key, e.code);
+							if (k != undefined) {
+								if (last != 3) {
+									last = 3;
+									logging.trace('sending ' + k + ' keyup event');
+								}
+								channel.send(JSON.stringify({d:1, a:3, k:k}));
 							}
-							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
@@ -294,10 +337,9 @@
 							e.preventDefault();
 							var rect = video.getBoundingClientRect(),
 								evt = {
-									l: 2,
-									t: 1,
-									s: {w: Math.round(rect.width), h: Math.round(rect.height)},
-									p: {l: Math.round(e.clientX - rect.left), t: Math.round(e.clientY - rect.top)}
+									d: 2,
+									a: 1,
+									p: {w: Math.round(rect.width), h: Math.round(rect.height), l: Math.round(e.clientX - rect.left), t: Math.round(e.clientY - rect.top)}
 								};
 							if (last != 4) {
 								last = 4;
@@ -310,34 +352,28 @@
 					video.addEventListener('mousedown', (e) => {
 						if (sharing) {
 							e.preventDefault();
-							var rect = video.getBoundingClientRect(),
-								evt = {
-									l: 2,
-									t: 2,
-									k: e.button,
-								};
-							if (last != 5) {
-								last = 5;
-								logging.trace('sending mousedown event');
+							var k = mouse(e.button);
+							if (k != undefined) {
+								if (last != 5) {
+									last = 5;
+									logging.trace('sending ' + k + ' mousedown event');
+								}
+								channel.send(JSON.stringify({d:2, a:2, k:k}));
 							}
-							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
 					video.addEventListener('mouseup', (e) => {
 						if (sharing) {
 							e.preventDefault();
-							var rect = video.getBoundingClientRect(),
-								evt = {
-									l: 2,
-									t: 3,
-									k: e.button,
-								};
-							if (last != 6) {
-								last = 6;
-								logging.trace('sending mouseup event');
+							var k = mouse(e.button);
+							if (k != undefined) {
+								if (last != 6) {
+									last = 6;
+									logging.trace('sending ' + k + ' mouseup event');
+								}
+								channel.send(JSON.stringify({d:2, a:3, k:k}));
 							}
-							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
