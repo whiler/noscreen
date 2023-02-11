@@ -244,52 +244,23 @@
 		});
 	}
 
-	function forwardevents(sock, conn, label, addr) {
-		return new Promise((resolve, reject) => {
-			conn.addEventListener('datachannel', (e) => {
-				logging.debug('received datachannel ' + e.channel.label);
-				if (e.channel.label == label) {
-					var channel = e.channel;
-					channel.addEventListener('open', (e) => {
-						logging.info('datachannel ' + label + ' is opened');
-						socket(addr).then((actor) => {
-							logging.info('actor is ready');
-							var forwarding = true;
-							actor.addEventListener('close', (e) => {
-								forwarding = false;
-								channel.close();
-								return false;
-							}, false);
-							channel.addEventListener('message', (e) => {
-								if (forwarding) {
-									logging.trace('forwarding a event from actor to channel');
-									actor.send(e.data);
-								}
-								return false;
-							}, false);
-							resolve();
-							return false;
-						}, (reason) => {
-							logging.warn(reason);
-							channel.close();
-							reject(reason);
-							return false;
-						});
-						return false;
-					}, false);
-					channel.addEventListener('close', (e) => {
-						logging.info('datachannel ' + label + ' is closed');
-						return false;
-					}, false);
-				}
-				return false;
-			}, false);
-		});
+	function forward(actor, channel) {
+		var forwarding = true;
+		actor.addEventListener('close', (e) => { forwarding = false; return false; }, false);
+		channel.addEventListener('close', (e) => { forwarding = false; return false; }, false);
+		channel.addEventListener('message', (e) => {
+			if (forwarding) {
+				logging.trace('forwarding a message from channel to actor');
+				actor.send(e.data);
+			}
+			return false;
+		}, false);
+		return false;
 	}
 	// }}}
 
 	function bootstrap() {
-		var shareState = 0,
+		var label = 'events',
 			turncfg = {
 				addr: '#advanced .turn input[name=addr]',
 				username: '#advanced .turn input[name=username]',
@@ -328,8 +299,16 @@
 				signal(signalcfg, doc.querySelector('#main .local input[name=id]').value, doc.querySelector('#main .remote input[name=id]').value).then((sock) => {
 					logging.info('signal is ready');
 					var conn = initialize(turncfg, sock);
-					sharestream(sock, conn, stream, 'cmd').then((channel) => {
+					sharestream(sock, conn, stream, label).then((channel) => {
 						logging.info('screen is being share');
+						socket(doc.querySelector('#advanced .actor input[name=addr]').value).then((actor) => {
+							logging.info('actor is ready');
+							forward(actor, channel);
+							return false;
+						}, (reason) => {
+							logging.warn('actor is not ready');
+							return false;
+						});
 						return false;
 					}, (reason) => {
 						logging.warn(reason);
