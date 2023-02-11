@@ -35,7 +35,7 @@
 	function initialize(turncfg, sock) {
 		var cfg = {iceServers: [{urls: ['stun:stun.l.google.com:19302', 'stun:stun.qq.com:3478']}]},
 			conn = null,
-			addr = doc.querySelector(addrcfg.addr).value,
+			addr = doc.querySelector(turncfg.addr).value,
 			username = doc.querySelector(turncfg.username).value,
 			credential = doc.querySelector(turncfg.credential).value;
 
