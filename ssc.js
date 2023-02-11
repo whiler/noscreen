@@ -251,8 +251,16 @@
 
 	function forward(actor, channel) {
 		var forwarding = true;
-		actor.addEventListener('close', (e) => { forwarding = false; return false; }, false);
-		channel.addEventListener('close', (e) => { forwarding = false; return false; }, false);
+		actor.addEventListener('close', (e) => {
+			forwarding = false;
+			channel.close();
+			return false;
+		}, false);
+		channel.addEventListener('close', (e) => {
+			forwarding = false;
+			actor.close();
+			return false;
+		}, false);
 		channel.addEventListener('message', (e) => {
 			if (forwarding) {
 				logging.trace('forwarding a message from channel to actor');
