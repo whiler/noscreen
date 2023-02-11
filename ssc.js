@@ -218,7 +218,8 @@
 				if (e.channel.label == label) {
 					var channel = e.channel,
 						sharing = false,
-						promised = false;
+						promised = false,
+						last = -1;
 					channel.addEventListener('open', (e) => {
 						logging.info('datachannel ' + label + ' is opened');
 						sharing = true;
@@ -238,8 +239,7 @@
 						return false;
 					}, false);
 
-					video.addEventListener('keydown', (e) => {
-						logging.trace('keydown');
+					doc.addEventListener('keydown', (e) => {
 						if (sharing) {
 							e.preventDefault();
 							var evt = {
@@ -247,12 +247,15 @@
 									t: 1,
 									k: e.keyCode
 								};
-							logging.trace('sending keydown event');
+							if (last != 1) {
+								last = 1;
+								logging.trace('sending keydown event');
+							}
 							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
-					video.addEventListener('keypress', (e) => {
+					doc.addEventListener('keypress', (e) => {
 						if (sharing) {
 							e.preventDefault();
 							var evt = {
@@ -260,12 +263,15 @@
 									t: 2,
 									k: e.charCode
 								};
-							logging.trace('sending keypress event');
+							if (last != 2) {
+								last = 2
+								logging.trace('sending keypress event');
+							}
 							channel.send(JSON.stringify(evt));
 						}
 						return false;
 					}, false);
-					video.addEventListener('keyup', (e) => {
+					doc.addEventListener('keyup', (e) => {
 						if (sharing) {
 							e.preventDefault();
 							var evt = {
@@ -273,7 +279,10 @@
 									t: 3,
 									k: e.keyCode
 								};
-							logging.trace('sending keypress event');
+							if (last != 3) {
+								last = 3;
+								logging.trace('sending keypress event');
+							}
 							channel.send(JSON.stringify(evt));
 						}
 						return false;
@@ -290,7 +299,10 @@
 									s: {w: Math.round(rect.width), h: Math.round(rect.height)},
 									p: {l: Math.round(e.clientX - rect.left), t: Math.round(e.clientY - rect.top)}
 								};
-							logging.trace('sending mousemove event');
+							if (last != 4) {
+								last = 4;
+								logging.trace('sending mousemove event');
+							}
 							channel.send(JSON.stringify(evt));
 						}
 						return false;
@@ -304,7 +316,10 @@
 									t: 2,
 									k: e.button,
 								};
-							logging.trace('sending mousedown event');
+							if (last != 5) {
+								last = 5;
+								logging.trace('sending mousedown event');
+							}
 							channel.send(JSON.stringify(evt));
 						}
 						return false;
@@ -318,7 +333,10 @@
 									t: 3,
 									k: e.button,
 								};
-							logging.trace('sending mouseup event');
+							if (last != 6) {
+								last = 6;
+								logging.trace('sending mouseup event');
+							}
 							channel.send(JSON.stringify(evt));
 						}
 						return false;
