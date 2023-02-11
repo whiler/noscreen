@@ -213,14 +213,30 @@
 	// {{{ 指令
 	function shareevents(sock, conn, label, video) {
 		return new Promise((resolve, reject) => {
-			var promised = false,
-				sharing = false,
-				channel = conn.createDataChannel(label);
-			channel.addEventListener('open', (e) => {
-				logging.info('datachannel ' + label + ' is opened');
-				sharing = true;
-				if (!promised) {
-					promised = true;
+			conn.addEventListener('datachannel', (e) => {
+				logging.trace('received datachannel ' + e.channel.label);
+				if (e.channel.label == label) {
+					var channel = e.channel,
+						sharing = false,
+						promised = false;
+					channel.addEventListener('open', (e) => {
+						logging.info('datachannel ' + label + ' is opened');
+						sharing = true;
+						if (!promised) {
+							promised = true;
+							resolve();
+						}
+						return false;
+					}, false);
+					channel.addEventListener('close', (e) => {
+						logging.info('datachannel ' + label + ' is closed');
+						sharing = false;
+						if (!promised) {
+							promised = true;
+							reject(new Error('DataChannel closed'));
+						}
+						return false;
+					}, false);
 					video.addEventListener('mousemove', (e) => {
 						if (sharing) {
 							logging.trace('sending mousemove event');
@@ -228,18 +244,7 @@
 						}
 						return false;
 					}, false);
-					resolve();
 				}
-				return false;
-			}, false);
-			channel.addEventListener('close', (e) => {
-				logging.info('datachannel ' + label + ' is closed');
-				sharing = false;
-				if (!promised) {
-					promised = true;
-					reject();
-				}
-				return false;
 			}, false);
 		});
 	}
@@ -306,7 +311,8 @@
 							forward(actor, channel);
 							return false;
 						}, (reason) => {
-							logging.warn('actor is not ready');
+							logging.warn(reason);
+							channel.close();
 							return false;
 						});
 						return false;
@@ -335,6 +341,13 @@
 				var conn = initialize(turncfg, sock);
 				display(sock, conn, '#screen video').then((video) => {
 					logging.info('displaying remote screen');
+					shareevents(sock, conn, label, video).then(() => {
+						logging.info('sharing events');
+						return false;
+					}, (reason) => {
+						logging.warn(reason);
+						return false;
+					});
 					return false;
 				}, (reason) => {
 					logging.warn(reason);
