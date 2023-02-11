@@ -241,6 +241,7 @@
 
 					doc.addEventListener('keydown', (e) => {
 						if (sharing) {
+							e.preventDefault();
 							var evt = {
 									l: 1,
 									t: 1,
@@ -272,6 +273,7 @@
 					}, false);
 					doc.addEventListener('keyup', (e) => {
 						if (sharing) {
+							e.preventDefault();
 							var evt = {
 									l: 1,
 									t: 3,
