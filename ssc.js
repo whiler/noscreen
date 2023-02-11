@@ -267,7 +267,7 @@
 						switch (track.kind) {
 						case 'video':
 							var settings = track.getSettings();
-							logging.debug('video(' + track.id + ') = ' + settings.width + 'x' +  settings.height + '@' + settings.frameRate);
+							logging.debug('video(' + track.id + ') is ' + settings.width + 'x' +  settings.height + '@' + settings.frameRate);
 							break;
 						}
 					});
@@ -276,10 +276,8 @@
 							logging.info('signal is ready');
 							socket(doc.querySelector('#advanced .actor input[name=addr]').value).then(
 								(actor) => {
-									var conn = initialize(turncfg, sock);
 									logging.info('actor is ready');
-									doc.querySelector('#main .local button[type=submit]').disabled = true;
-									doc.querySelector('#main .local button[type=reset]').disabled = false;
+									var conn = initialize(turncfg, sock);
 									share(sock, conn, stream, actor).then(
 										(channel) => {
 											logging.info('sharing');
