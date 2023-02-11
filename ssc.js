@@ -153,6 +153,11 @@
 						resolve();
 					}
 					break;
+				case 'failed':
+					if (!promised) {
+						promised = true;
+						reject(new Error('RTCPeerConnection connect failed'));
+					}
 				}
 			}, false);
 			sync(sock, conn);
@@ -161,13 +166,25 @@
 
 	function display(sock, conn, path) {
 		return new Promise((resolve, reject) => {
+			var promised = false;
 			conn.addEventListener('track', (e) => {
 				logging.trace('received track');
-				if (e.streams.length > 0) {
+				if (!promised && e.streams.length > 0) {
+					promised = true;
 					var video = doc.querySelector(path);
 					video.srcObject = e.streams[0];
 					video.play();
 					resolve(video);
+				}
+				return false;
+			}, false);
+			conn.addEventListener('iceconnectionstatechange', (e) => {
+				switch (conn.iceConnectionState) {
+				case 'failed':
+					if (!promised) {
+						promised = true;
+						reject(new Error('RTCPeerConnection connect failed'));
+					}
 				}
 				return false;
 			}, false);
@@ -295,13 +312,6 @@
 					var conn = initialize(turncfg, sock);
 					sharestream(sock, conn, stream).then(() => {
 						logging.info('screen is being share');
-						forwardevents(sock, conn, 'cmd', doc.querySelector('#advanced .actor input[name=addr]').value).then(() => {
-							logging.info('forwarding events');
-							return false;
-						}, (reason) => {
-							logging.warn(reason);
-							return false;
-						});
 						return false;
 					}, (reason) => {
 						logging.warn(reason);
@@ -328,15 +338,6 @@
 				var conn = initialize(turncfg, sock);
 				display(sock, conn, '#screen video').then((video) => {
 					logging.info('displaying remote screen');
-					shareevents(sock, conn, 'cmd', video).then(() => {
-						logging.info('keyboard and mouse events are being share');
-						return false;
-					}, (reason) => {
-						logging.warn(reason);
-						conn.close();
-						sock.close();
-						return false;
-					});
 					return false;
 				}, (reason) => {
 					logging.warn(reason);
