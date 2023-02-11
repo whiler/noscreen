@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<title>屏幕共享和控制</title>
+	<link rel="stylesheet" href="ssc.css"/>
+</head>
+<body>
+	<article>
+		<noscript class="page">启用 JavaScript 体验完整功能</noscript>
+		<section id="main" class="page">
+			<div class="content">
+				<form class="local">
+					<table>
+						<tr>
+							<th>当前编号</th>
+							<td><input name="id" readonly/></td>
+							<td><button type="submit">共享</button><button type="reset" disabled>终止</button></td>
+						</tr>
+					</table>
+				</form>
+				<form class="remote">
+					<table>
+						<tr>
+							<th>远程编号</th>
+							<td><input name="id" autocomplete="off" placeholder="xxxx"/></td>
+							<td><button type="submit">控制</button><button type="reset" disabled>终止</button></td>
+						</tr>
+					</table>
+				</form>
+			</div>
+		</section>
+		<section id="screen" class="page">
+			<video autoplay playsinline></video>
+		</section>
+		<section id="advanced" class="page">
+			<div class="content">
+				<form class="turn">
+					<fieldset>
+						<legend>穿透</legend>
+						<table>
+							<tr>
+								<th>穿透服务</th>
+								<td><input name="addr" value="turn:turn.whiler.me:3478" placeholder="turn:example.com:3478"/></td>
+							</tr>
+							<tr>
+								<th>用户</th>
+								<td><input name="username" value="ssc" placeholder="username"/></td>
+							</tr>
+							<tr>
+								<th>密码</th>
+								<td><input name="credential" value="123456" placeholder="credential"/></td>
+							</tr>
+						</table>
+					</fieldset>
+				</form>
+				<form class="signal">
+					<fieldset>
+						<legend>信令</legend>
+						<table>
+							<tr>
+								<th>信令服务</th>
+								<td><input name="addr" value="wss://live.whiler.me/ws/relay" placeholder="wss://localhost:8443/signal"/></td>
+							</tr>
+							<tr>
+								<th>密令</th>
+								<td><input name="token" value="hJ6K67v9LKFqgx00" placeholder="token"/></td>
+							</tr>
+						</table>
+					</fieldset>
+				</form>
+				<form class="actor">
+					<fieldset>
+						<legend>遥控</legend>
+						<table>
+							<tr>
+								<th>遥控服务</th>
+								<td><input name="addr" value="wss://local.whiler.me:9242" placeholder="ws://localhost:9242"/></td>
+								<td></td>
+							</tr>
+						</table>
+					</fieldset>
+				</form>
+			</div>
+		</section>
+		<section id="logging">
+		</section>
+	</article>
+	<script async src="ssc.js"></script>
+</body>
+</html>

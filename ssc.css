@@ -1,0 +1,79 @@
+html, body {
+    min-height: 100vh;
+	scroll-behavior: smooth;
+}
+
+#main {
+	background-color: gold;
+}
+
+#main .content {
+	top: 40vh;
+}
+
+#screen {
+	background-color: black;
+}
+
+#screen video {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+#advanced {
+	background-color: yellow;
+}
+
+#advanced .content {
+	top: 30vh;
+}
+
+.content {
+	position: relative;
+}
+
+.content form, .content fieldset {
+	width: max-content;
+	margin: auto;
+}
+
+#logging p {
+	margin: 0;
+}
+
+#logging p:first-child {
+	margin-top: 1em;
+}
+
+#logging p:hover {
+	background-color: beige;
+}
+
+#logging p i {
+	margin-left: 0.2em;
+}
+
+#logging .trace {
+}
+
+#logging .debug {
+}
+
+#logging .info {
+	font-weight: bold;
+}
+
+#logging .warn {
+	font-weight: bold;
+	color: orange;
+}
+
+#logging .error {
+	font-weight: bold;
+	color: deeppink;
+}
+
+.page {
+	min-height: 100vh;
+}
