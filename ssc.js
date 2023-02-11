@@ -238,6 +238,46 @@
 						return false;
 					}, false);
 
+					video.addEventListener('keydown', (e) => {
+						if (sharing) {
+							e.preventDefault();
+							var evt = {
+									l: 1,
+									t: 1,
+									k: e.keyCode
+								};
+							logging.trace('sending keydown event');
+							channel.send(JSON.stringify(evt));
+						}
+						return false;
+					}, false);
+					video.addEventListener('keypress', (e) => {
+						if (sharing) {
+							e.preventDefault();
+							var evt = {
+									l: 1,
+									t: 2,
+									k: e.charCode
+								};
+							logging.trace('sending keypress event');
+							channel.send(JSON.stringify(evt));
+						}
+						return false;
+					}, false);
+					video.addEventListener('keyup', (e) => {
+						if (sharing) {
+							e.preventDefault();
+							var evt = {
+									l: 1,
+									t: 3,
+									k: e.keyCode
+								};
+							logging.trace('sending keypress event');
+							channel.send(JSON.stringify(evt));
+						}
+						return false;
+					}, false);
+
 					video.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; }, false);
 					video.addEventListener('mousemove', (e) => {
 						if (sharing) {
