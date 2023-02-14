@@ -79,7 +79,7 @@
 			cfg.iceServers.push({urls: [addr]});
 		} else if (addr.startsWith('turn') && username != '' && credential != '') {
 			cfg.iceServers.push({urls: [addr], username: username, credential: credential});
-		} else if (turn) {
+		} else if (addr) {
 			logging.warn('ignore stun/turn ' + addr);
 		}
 
@@ -87,7 +87,7 @@
 		conn.addEventListener('connectionstatechange', (e) => { logging.info('connectionState is ' + conn.connectionState); return false; }, false);
 		conn.addEventListener('negotiationneeded', (e) => { logging.trace(e); }, false);
 		conn.addEventListener('signalingstatechange', (e) => { logging.info('signalingState is ' + conn.signalingState); }, false);
-		conn.addEventListener('icecandidateerror', (e) => {logging.error(e);}, false);
+		conn.addEventListener('icecandidateerror', (e) => {logging.error(e.errorText);}, false);
 		conn.addEventListener('iceconnectionstatechange', (e) => { logging.info('iceConnectionState is ' + conn.iceConnectionState); }, false);
 		conn.addEventListener('icegatheringstatechange', (e) => { logging.info('iceGatheringState is ' + conn.iceGatheringState); }, false);
 		conn.addEventListener('icecandidate', (e) => {

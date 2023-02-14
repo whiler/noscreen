@@ -22,6 +22,7 @@ body {
 
 #screen video {
 	width: 100%;
+	object-fit: fill;
 }
 
 #screen video:focus {
