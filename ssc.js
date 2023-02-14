@@ -69,7 +69,7 @@
 	}
 
 	function initialize(turncfg, sock) {
-		var cfg = {iceServers: [{urls: ['stun:stun.l.google.com:19302', 'stun:stun.ipfire.org:3478']}]},
+		var cfg = {iceServers: [{urls: ['stun:stun.l.google.com:19302', 'stun:stun.antisip.com:3478']}]},
 			conn = null,
 			addr = doc.querySelector(turncfg.addr).value,
 			username = doc.querySelector(turncfg.username).value,
