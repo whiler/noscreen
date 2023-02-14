@@ -24,6 +24,10 @@ body {
 	width: 100%;
 }
 
+#screen video:focus {
+	outline: none;
+}
+
 #advanced {
 	background-color: yellow;
 }

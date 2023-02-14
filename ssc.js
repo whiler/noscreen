@@ -222,12 +222,18 @@
 		});
 	}
 
-	function display(sock, conn, path) {
+	function display(sock, conn, screen) {
 		return new Promise((resolve, reject) => {
 			var promised = false,
 				videoReady = false,
 				connectionReady = false,
-				video = doc.querySelector(path);
+				video = doc.createElement('video');
+			for (var child=screen.lastElementChild; child; child=screen.lastElementChild) {
+				screen.removeChild(child);
+			}
+			video.tabIndex = -1;
+			video.autoplay = true;
+			screen.appendChild(video);
 			conn.addEventListener('track', (e) => {
 				logging.trace('received track');
 				if (e.streams.length > 0) {
@@ -292,7 +298,8 @@
 						return false;
 					}, false);
 
-					doc.addEventListener('keydown', (e) => {
+					video.addEventListener('mouseenter', (e) => {video.focus(); return false}, false);
+					video.addEventListener('keydown', (e) => {
 						if (sharing) {
 							e.preventDefault();
 							var k = keyboard(e.key, e.code);
@@ -306,7 +313,7 @@
 						}
 						return false;
 					}, false);
-					doc.addEventListener('keypress', (e) => {
+					video.addEventListener('keypress', (e) => {
 						if (sharing) {
 							e.preventDefault();
 							var k = keyboard(e.key, e.code);
@@ -320,7 +327,7 @@
 						}
 						return false;
 					}, false);
-					doc.addEventListener('keyup', (e) => {
+					video.addEventListener('keyup', (e) => {
 						if (sharing) {
 							e.preventDefault();
 							var k = keyboard(e.key, e.code);
@@ -493,6 +500,14 @@
 							}
 							return false;
 						}, false);
+						conn.addEventListener('connectionstatechange', (e) => {
+							switch(conn.connectionState) {
+							case 'failed':
+								logging.info('remote');
+								return closer(null);
+							}
+							return false;
+						}, false);
 						return false;
 					}, (reason) => {
 						logging.warn(reason);
@@ -530,8 +545,9 @@
 				button.addEventListener('click', closer, false);
 				doc.querySelector('#main .remote button[type=submit]').disabled = true;
 				doc.querySelector('#main .remote button[type=reset]').disabled = false;
-				display(sock, conn, '#screen video').then((video) => {
+				display(sock, conn, doc.querySelector('#screen')).then((video) => {
 					logging.info('displaying remote screen');
+					video.focus();
 					shareevents(sock, conn, label, video).then(() => {
 						logging.info('sharing events');
 						return false;
@@ -541,6 +557,14 @@
 					});
 					conn.addEventListener('iceconnectionstatechange', (e) => {
 						switch (conn.iceConnectionState) {
+						case 'failed':
+							logging.info('remote');
+							return closer(null);
+						}
+						return false;
+					}, false);
+					conn.addEventListener('connectionstatechange', (e) => {
+						switch(conn.connectionState) {
 						case 'failed':
 							logging.info('remote');
 							return closer(null);
