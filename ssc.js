@@ -416,6 +416,19 @@
 	}
 	// }}}
 
+	function initsettings() {
+		var searchParams = new URLSearchParams(win.location.search);
+		doc.querySelector('#main .local input[name=id]').value = searchParams.get('main.local.id') || randoms('', 4);
+		doc.querySelector('#main .remote input[name=id]').value = searchParams.get('main.remote.id');
+		doc.querySelector('#advanced .turn input[name=addr]').value = searchParams.get('advanced.turn.addr');
+		doc.querySelector('#advanced .turn input[name=username]').value = searchParams.get('advanced.turn.username');
+		doc.querySelector('#advanced .turn input[name=credential]').value = searchParams.get('advanced.turn.credential');
+		doc.querySelector('#advanced .signal input[name=addr]').value = searchParams.get('advanced.signal.addr');
+		doc.querySelector('#advanced .signal input[name=token]').value = searchParams.get('advanced.signal.token');
+		doc.querySelector('#advanced .actor input[name=addr]').value = searchParams.get('advanced.actor.addr');
+		return false;
+	}
+
 	function bootstrap() {
 		var label = 'events',
 			turncfg = {
@@ -429,7 +442,8 @@
 			};
 
 		initlogger('#logging');
-		doc.querySelector('#main .local input[name=id]').value = randoms('', 4);
+		initsettings();
+		win.location.hash = '#main';
 
 		// 共享
 		doc.querySelector('#main .local').addEventListener('submit', (e) => {
