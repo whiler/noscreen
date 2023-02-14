@@ -284,9 +284,9 @@
 					}, false);
 					channel.addEventListener('close', (e) => {
 						logging.info('datachannel ' + label + ' is closed');
+						sharing = false;
 						if (!promised) {
 							promised = true;
-							sharing = false;
 							reject(new Error('remote actor is not enabled'));
 						}
 						return false;
