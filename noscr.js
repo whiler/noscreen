@@ -62,10 +62,16 @@
 	}
 
 	function signal(cfg, src, dst) {
-		var u = new URL(doc.querySelector(cfg.addr).value);
-		u.pathname += u.pathname.endsWith('/') ? src : '/' + src;
-		u.searchParams.append('token', doc.querySelector(cfg.token).value);
-		return socket(u.toString());
+		var addr = doc.querySelector(cfg.addr).value,
+			u = null;
+		if (!addr.startsWith('ws')) {
+			return new Promise((resolve, reject) => { reject(new Error('invalid signal server address')); });
+		} else {
+			u = new URL(addr);
+			u.pathname += u.pathname.endsWith('/') ? src : '/' + src;
+			u.searchParams.append('token', doc.querySelector(cfg.token).value);
+			return socket(u.toString());
+		}
 	}
 
 	function initialize(turncfg, sock) {
