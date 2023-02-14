@@ -209,14 +209,15 @@
 					var offers = JSON.stringify(offer);
 					logging.trace('sending offer ' + offers);
 					sock.send(offers);
-				});
-			}).catch((err) => {
-				if (!promised) {
-					promised = true;
-					channel.close();
-					reject(err);
 					return false;
-				}
+				}, (reason) => {
+					if (!promised) {
+						promised = true;
+						channel.close();
+						reject(reason);
+					}
+					return false;
+				});
 			});
 		});
 	}
@@ -271,19 +272,22 @@
 						last = -1;
 					channel.addEventListener('open', (e) => {
 						logging.info('datachannel ' + label + ' is opened');
-						sharing = true;
-						if (!promised) {
-							promised = true;
-							resolve();
-						}
+						setTimeout(function(){
+							if (!promised) {
+								promised = true;
+								sharing = true;
+								resolve();
+							}
+							return false;
+						}, 1000);
 						return false;
 					}, false);
 					channel.addEventListener('close', (e) => {
 						logging.info('datachannel ' + label + ' is closed');
-						sharing = false;
 						if (!promised) {
 							promised = true;
-							reject(new Error('DataChannel closed'));
+							sharing = false;
+							reject(new Error('remote actor is not enabled'));
 						}
 						return false;
 					}, false);
@@ -416,6 +420,7 @@
 				addr: '#advanced .signal input[name=addr]',
 				token: '#advanced .signal input[name=token]'
 			};
+
 		initlogger('#logging');
 		doc.querySelector('#main .local input[name=id]').value = randoms('', 4);
 
@@ -444,7 +449,30 @@
 				});
 				signal(signalcfg, doc.querySelector('#main .local input[name=id]').value, doc.querySelector('#main .remote input[name=id]').value).then((sock) => {
 					logging.info('signal is ready');
-					var conn = initialize(turncfg, sock);
+					var conn = initialize(turncfg, sock)
+						button = doc.querySelector('#main .local button[type=reset]'),
+						closer = function(e) {
+						if (e) {
+							e.preventDefault();
+							logging.info('click');
+						}
+						button.removeEventListener('click', closer, false);
+						doc.querySelector('#main .local button[type=reset]').disabled = true;
+						doc.querySelector('#main .local button[type=submit]').disabled = false;
+						conn.close();
+						sock.close();
+						stream.getTracks().forEach((track) => { track.stop(); });
+						return false;
+					};
+					doc.querySelector('#main .local button[type=submit]').disabled = true;
+					doc.querySelector('#main .local button[type=reset]').disabled = false;
+					button.addEventListener('click', closer, false);
+					stream.getTracks().forEach(track => {
+						track.addEventListener('ended', (e) => {
+							logging.info('end');
+							return closer(null);
+						}, false);
+					});
 					sharestream(sock, conn, stream, label).then((channel) => {
 						logging.info('screen is being share');
 						socket(doc.querySelector('#advanced .actor input[name=addr]').value).then((actor) => {
@@ -453,16 +481,22 @@
 							return false;
 						}, (reason) => {
 							logging.warn(reason);
+							logging.warn('local actor is not enabled');
 							channel.close();
 							return false;
 						});
+						conn.addEventListener('iceconnectionstatechange', (e) => {
+							switch (conn.iceConnectionState) {
+							case 'failed':
+								logging.info('remote');
+								return closer(null);
+							}
+							return false;
+						}, false);
 						return false;
 					}, (reason) => {
 						logging.warn(reason);
-						conn.close();
-						sock.close();
-						stream.getTracks().forEach((track) => { track.stop(); });
-						return false;
+						return closer(null);
 					});
 					return false;
 				}, (reason) => {
@@ -479,7 +513,23 @@
 			e.preventDefault();
 			signal(signalcfg, doc.querySelector('#main .remote input[name=id]').value, doc.querySelector('#main .local input[name=id]').value).then((sock) => {
 				logging.info('signal is ready');
-				var conn = initialize(turncfg, sock);
+				var conn = initialize(turncfg, sock),
+					button = doc.querySelector('#main .remote button[type=reset]'),
+					closer = function(e) {
+					if (e) {
+						e.preventDefault();
+						logging.info('click');
+					}
+					doc.querySelector('#main .remote button[type=reset]').disabled = true;
+					doc.querySelector('#main .remote button[type=submit]').disabled = false;
+					button.removeEventListener('click', closer, false),
+					conn.close();
+					sock.close();
+					return false;
+				};
+				button.addEventListener('click', closer, false);
+				doc.querySelector('#main .remote button[type=submit]').disabled = true;
+				doc.querySelector('#main .remote button[type=reset]').disabled = false;
 				display(sock, conn, '#screen video').then((video) => {
 					logging.info('displaying remote screen');
 					shareevents(sock, conn, label, video).then(() => {
@@ -489,13 +539,20 @@
 						logging.warn(reason);
 						return false;
 					});
+					conn.addEventListener('iceconnectionstatechange', (e) => {
+						switch (conn.iceConnectionState) {
+						case 'failed':
+							logging.info('remote');
+							return closer(null);
+						}
+						return false;
+					}, false);
 					return false;
 				}, (reason) => {
 					logging.warn(reason);
-					conn.close();
-					sock.close();
-					return false;
+					return closer(null);
 				});
+				doc.querySelector('#screen').scrollIntoView({behavior: 'smooth'});
 				return false;
 			}, (reason) => {
 				logging.error(reason);
@@ -507,11 +564,7 @@
 		return true;
 	}
 
-	if (doc.readyState == 'loading') {
-		doc.addEventListener('DOMContentLoaded', bootstrap);
-	} else {
-		bootstrap();
-	}
+	doc.addEventListener('DOMContentLoaded', bootstrap);
 
 	return true;
 })(window, document);

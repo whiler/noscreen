@@ -9,41 +9,47 @@
 </head>
 <body>
 	<article>
-		<noscript class="page">启用 JavaScript 体验完整功能</noscript>
-		<section id="main" class="page">
-			<div class="content">
+		<noscript>启用 JavaScript 体验完整功能</noscript>
+		<section id="main" class="page center">
+			<div>
 				<form class="local">
-					<table>
-						<tr>
-							<th>当前编号</th>
-							<td><input name="id" readonly/></td>
-							<td><button type="submit">共享</button><button type="reset" disabled>终止</button></td>
-						</tr>
-					</table>
+					<fieldset>
+						<legend>本地</legend>
+						<table>
+							<tr>
+								<th>编号</th>
+								<td><input name="id" readonly/></td>
+								<td><button type="submit">共享</button><button type="reset" disabled>停止</button></td>
+							</tr>
+						</table>
+					</fieldset>
 				</form>
 				<form class="remote">
-					<table>
-						<tr>
-							<th>远程编号</th>
-							<td><input name="id" autocomplete="off" placeholder="xxxx"/></td>
-							<td><button type="submit">控制</button><button type="reset" disabled>终止</button></td>
-						</tr>
-					</table>
+					<fieldset>
+						<legend>远程</legend>
+						<table>
+							<tr>
+								<th>编号</th>
+								<td><input name="id" autocomplete="off" placeholder="xxxx"/></td>
+								<td><button type="submit">控制</button><button type="reset" disabled>停止</button></td>
+							</tr>
+						</table>
+					</fieldset>
 				</form>
 			</div>
 		</section>
 		<section id="screen" class="page">
 			<video autoplay playsinline></video>
 		</section>
-		<section id="advanced" class="page">
-			<div class="content">
+		<section id="advanced" class="page center">
+			<div>
 				<form class="turn">
 					<fieldset>
-						<legend>穿透</legend>
+						<legend>穿透服务</legend>
 						<table>
 							<tr>
-								<th>穿透服务</th>
-								<td><input name="addr" value="turn:turn.whiler.me:3478" placeholder="turn:example.com:3478"/></td>
+								<th>地址</th>
+								<td><input name="addr" value="turn:turn.whiler.me:3478" placeholder="turn:localhost:3478"/></td>
 							</tr>
 							<tr>
 								<th>用户</th>
@@ -58,11 +64,11 @@
 				</form>
 				<form class="signal">
 					<fieldset>
-						<legend>信令</legend>
+						<legend>信令服务</legend>
 						<table>
 							<tr>
-								<th>信令服务</th>
-								<td><input name="addr" value="wss://live.whiler.me/ws/relay" placeholder="wss://localhost:8443/signal"/></td>
+								<th>地址</th>
+								<td><input name="addr" value="wss://live.whiler.me/ws/relay" placeholder="ws://localhost:8443/signal"/></td>
 							</tr>
 							<tr>
 								<th>密令</th>
@@ -73,11 +79,11 @@
 				</form>
 				<form class="actor">
 					<fieldset>
-						<legend>遥控</legend>
+						<legend>遥控服务</legend>
 						<table>
 							<tr>
-								<th>遥控服务</th>
-								<td><input name="addr" value="wss://local.whiler.me:9242" placeholder="ws://localhost:9242"/></td>
+								<th>地址</th>
+								<td><input name="addr" value="wss://local.whiler.me:9242" placeholder="wss://localhost:9242"/></td>
 								<td></td>
 							</tr>
 						</table>
@@ -85,9 +91,8 @@
 				</form>
 			</div>
 		</section>
-		<section id="logging">
-		</section>
+		<section id="logging"></section>
 	</article>
-	<script async src="ssc.js"></script>
+	<script defer src="ssc.js"></script>
 </body>
 </html>
