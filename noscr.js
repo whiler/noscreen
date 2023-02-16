@@ -476,7 +476,7 @@
 				});
 				signal(signalcfg, doc.querySelector('#main .local input[name=id]').value, doc.querySelector('#main .remote input[name=id]').value).then((sock) => {
 					logging.info('signal is ready');
-					var conn = initialize(turncfg, sock)
+					var conn = initialize(turncfg, sock),
 						button = doc.querySelector('#main .local button[type=reset]'),
 						closer = function(e) {
 						if (e) {
