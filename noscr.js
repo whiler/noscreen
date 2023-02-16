@@ -74,6 +74,12 @@
 		}
 	}
 
+	function actor(addr, token) {
+		var u = new URL(addr);
+		u.searchParams.append('token', token);
+		return socket(u.toString());
+	}
+
 	function initialize(turncfg, sock) {
 		var cfg = {iceServers: [{urls: ['stun:stun.l.google.com:19302', 'stun:stun.antisip.com:3478']}]},
 			conn = null,
@@ -502,9 +508,9 @@
 					});
 					sharestream(sock, conn, stream, label).then((channel) => {
 						logging.info('screen is being share');
-						socket(doc.querySelector('#advanced .actor input[name=addr]').value).then((actor) => {
+						actor(doc.querySelector('#advanced .actor input[name=addr]').value, doc.querySelector('#advanced .actor input[name=token]').value).then((proxy) => {
 							logging.info('actor is ready');
-							forward(actor, channel);
+							forward(proxy, channel);
 							return false;
 						}, (reason) => {
 							logging.warn(reason);
