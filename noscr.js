@@ -165,7 +165,7 @@
 	}
 
 	function keyboard(key, code) {
-		if (key.length == 1) {
+		if (key.length == 1 && key != ' ') {
 			return key
 		} else {
 			return keys[key.toLowerCase()]
