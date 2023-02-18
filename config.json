@@ -10,8 +10,8 @@
       },
       "turn": {
          "addr": "turn:turn.noscr.v6.navy:3478",
-         "credential": "noscr",
-         "username": "oR42tSnlVRjM2pV1"
+         "username": "noscr",
+         "credential": "oR42tSnlVRjM2pV1"
       }
    },
    "main": {
