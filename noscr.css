@@ -33,12 +33,12 @@ body {
 	background-color: gold;
 }
 
-#logging p {
-	margin: 0 auto;
+#logging {
+	padding: 1em;
 }
 
-#logging p:first-child {
-	margin-top: 1em;
+#logging p {
+	margin: 0 auto;
 }
 
 #logging p:hover {
@@ -47,6 +47,10 @@ body {
 
 #logging p i {
 	margin-left: 0.2em;
+}
+
+#logging .trace {
+	font-weight: lighter;
 }
 
 #logging .info {
