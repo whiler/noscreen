@@ -49,20 +49,24 @@ body {
 	margin-left: 0.2em;
 }
 
-#logging .trace {
+#logging .trace i {
 	font-weight: lighter;
 }
 
-#logging .info {
+#logging .debug i {
+	font-weight: normal;
+}
+
+#logging .info i {
 	font-weight: bold;
 }
 
-#logging .warn {
+#logging .warn i {
 	font-weight: bold;
 	color: orange;
 }
 
-#logging .error {
+#logging .error i {
 	font-weight: bold;
 	color: deeppink;
 }
