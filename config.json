@@ -1,0 +1,25 @@
+{
+   "advanced": {
+      "actor": {
+         "addr": "wss://local.noscr.v6.navy:9242",
+         "token": null
+      },
+      "signal": {
+         "addr": "wss://signal.noscr.v6.navy/ws/pipe",
+         "token": "rR2ExbsLutaKp1j4"
+      },
+      "turn": {
+         "addr": "turn:turn.noscr.v6.navy:3478",
+         "credential": "noscr",
+         "username": "oR42tSnlVRjM2pV1"
+      }
+   },
+   "main": {
+      "local": {
+         "id": null
+      },
+      "remote": {
+         "id": null
+      }
+   }
+}

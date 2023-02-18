@@ -429,7 +429,9 @@
 	// }}}
 
 	function initsettings() {
-		var searchParams = new URLSearchParams(win.location.search);
+		var searchParams = new URLSearchParams(win.location.search),
+			req = new XMLHttpRequest();
+		logging.debug('updating settings from search params');
 		doc.querySelector('#main .local input[name=id]').value = searchParams.get('main.local.id') || randoms('', 4);
 		doc.querySelector('#main .remote input[name=id]').value = searchParams.get('main.remote.id');
 		doc.querySelector('#advanced .turn input[name=addr]').value = searchParams.get('advanced.turn.addr');
@@ -438,6 +440,51 @@
 		doc.querySelector('#advanced .signal input[name=addr]').value = searchParams.get('advanced.signal.addr');
 		doc.querySelector('#advanced .signal input[name=token]').value = searchParams.get('advanced.signal.token');
 		doc.querySelector('#advanced .actor input[name=addr]').value = searchParams.get('advanced.actor.addr');
+		doc.querySelector('#advanced .actor input[name=token]').value = searchParams.get('advanced.actor.token');
+
+		req.open('GET', 'config.json');
+		req.addEventListener('load', (e) => {
+			if (req.readyState === req.DONE && req.status === 200) {
+				var cfg = JSON.parse(req.responseText),
+					node = null;
+				logging.debug('updating settings from config.json');
+				if (cfg.main != undefined) {
+					if (cfg.main.local != undefined) {
+						node = doc.querySelector('#main .local input[name=id]');
+						node.value = node.value || cfg.main.local.id || randoms('', 4);
+					}
+					if (cfg.main.remote != undefined) {
+						node = doc.querySelector('#main .remote input[name=id]');
+						node.value = node.value || cfg.main.remote.id || '';
+					}
+				}
+				if (cfg.advanced != undefined) {
+					if (cfg.advanced.turn != undefined) {
+						node = doc.querySelector('#advanced .turn input[name=addr]');
+						node.value = node.value || cfg.advanced.turn.addr || '';
+						node = doc.querySelector('#advanced .turn input[name=username]');
+						node.value = node.value || cfg.advanced.turn.username || '';
+						node = doc.querySelector('#advanced .turn input[name=credential]');
+						node.value = node.value || cfg.advanced.turn.credential || '';
+					}
+					if (cfg.advanced.signal != undefined) {
+						node = doc.querySelector('#advanced .signal input[name=addr]');
+						node.value = node.value || cfg.advanced.signal.addr || '';
+						node = doc.querySelector('#advanced .signal input[name=token]');
+						node.value = node.value || cfg.advanced.signal.token || '';
+					}
+					if (cfg.advanced.actor != undefined) {
+						node = doc.querySelector('#advanced .actor input[name=addr]');
+						node.value = node.value || cfg.advanced.actor.addr || '';
+						node = doc.querySelector('#advanced .actor input[name=token]');
+						node.value = node.value || cfg.advanced.actor.token || '';
+					}
+				}
+			}
+			return false;
+		});
+		req.send(null);
+
 		return false;
 	}
 
