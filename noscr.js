@@ -109,9 +109,11 @@
 			return false;
 		}, false);
 		conn.addEventListener('icecandidate', (e) => {
-			var candidate = JSON.stringify(e.candidate);
-			logging.trace('sending candidate ' + candidate);
-			sock.send(candidate);
+			if (e.candidate) {
+				var candidate = JSON.stringify(e.candidate);
+				logging.trace('sending candidate ' + candidate);
+				sock.send(candidate);
+			}
 			return false;
 		}, false);
 
@@ -542,7 +544,6 @@
 
 		initlogger('#logging');
 		initsettings('config.json');
-		win.location.hash = '#main';
 
 		// {{{ 共享
 		doc.querySelector('#main .local').addEventListener('submit', (e) => {
