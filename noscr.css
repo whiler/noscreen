@@ -2,6 +2,10 @@ body {
 	margin: 0;
 }
 
+table {
+  width: 100%;
+}
+
 .page {
 	min-height: 100vh;
 }
