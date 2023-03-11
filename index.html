@@ -1,119 +1,119 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset="utf-8"/>
-	<meta name="viewport" content="width=device-width, initial-scale=1"/>
-	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-	<title>屏幕共享和控制</title>
-	<link rel="stylesheet" href="noscr.css"/>
-	<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
-	<link rel="icon" type="image/png" href="favicon.png"/>
-</head>
-<body>
-	<article>
-		<noscript>启用 JavaScript 体验完整功能</noscript>
-		<section id="main" class="page center">
-			<div>
-				<form class="local">
-					<fieldset>
-						<legend>本地</legend>
-						<table>
-							<tr>
-								<th>编号</th>
-								<td><input name="id" readonly required/></td>
-								<td><button type="submit">共享</button><button type="reset" disabled>停止</button></td>
-							</tr>
-						</table>
-					</fieldset>
-				</form>
-				<form class="remote">
-					<fieldset>
-						<legend>远程</legend>
-						<table>
-							<tr>
-								<th>编号</th>
-								<td><input name="id" autocomplete="off" placeholder="xxxx" required/></td>
-								<td><button type="submit">控制</button><button type="reset" disabled>停止</button></td>
-							</tr>
-						</table>
-					</fieldset>
-				</form>
-			</div>
-		</section>
-		<section id="screen" class="page"></section>
-		<section id="advanced" class="page center">
-			<div>
-				<form class="turn">
-					<fieldset>
-						<legend>穿透服务</legend>
-						<table>
-							<tr>
-								<th>地址</th>
-								<td><input name="addr" placeholder="turn:localhost:3478"/></td>
-							</tr>
-							<tr>
-								<th>用户</th>
-								<td><input name="username" placeholder="username"/></td>
-							</tr>
-							<tr>
-								<th>密码</th>
-								<td><input name="credential" placeholder="credential"/></td>
-							</tr>
-						</table>
-					</fieldset>
-				</form>
-				<form class="signal">
-					<fieldset>
-						<legend>信令服务</legend>
-						<table>
-							<tr>
-								<th>地址</th>
-								<td><input name="addr" placeholder="ws://localhost:8443/signal" required/></td>
-							</tr>
-							<tr>
-								<th>密令</th>
-								<td><input name="token" placeholder="token"/></td>
-							</tr>
-						</table>
-					</fieldset>
-				</form>
-				<form class="actor">
-					<fieldset>
-						<legend>遥控服务</legend>
-						<table>
-							<tr>
-								<th>地址</th>
-								<td><input name="addr" placeholder="wss://localhost:9242"/></td>
-							</tr>
-							<tr>
-								<th>密令</th>
-								<td><input name="token" placeholder="token"/></td>
-							</tr>
-						</table>
-					</fieldset>
-          <table>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>屏幕共享和控制</title>
+    <link rel="stylesheet" href="noscr.css"/>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+    <link rel="icon" type="image/png" href="favicon.png"/>
+  </head>
+  <body>
+    <article>
+      <noscript>启用 JavaScript 体验完整功能</noscript>
+      <section id="main" class="page center">
+        <div>
+          <form class="local">
+            <fieldset>
+              <legend>本地</legend>
+              <table>
+                <tr>
+                  <th>编号</th>
+                  <td><input name="id" readonly required/></td>
+                  <td><button type="submit">共享</button><button type="reset" disabled>停止</button></td>
+                </tr>
+              </table>
+            </fieldset>
+          </form>
+          <form class="remote">
+            <fieldset>
+              <legend>远程</legend>
+              <table>
+                <tr>
+                  <th>编号</th>
+                  <td><input name="id" autocomplete="off" placeholder="xxxx" required/></td>
+                  <td><button type="submit">控制</button><button type="reset" disabled>停止</button></td>
+                </tr>
+              </table>
+            </fieldset>
+          </form>
+        </div>
+      </section>
+      <section id="screen" class="page"></section>
+      <section id="advanced" class="page center">
+        <div>
+          <form class="turn">
+            <fieldset>
+              <legend>穿透服务</legend>
+              <table>
+                <tr>
+                  <th>地址</th>
+                  <td><input name="addr" placeholder="turn:localhost:3478"/></td>
+                </tr>
+                <tr>
+                  <th>用户</th>
+                  <td><input name="username" placeholder="username"/></td>
+                </tr>
+                <tr>
+                  <th>密码</th>
+                  <td><input name="credential" placeholder="credential"/></td>
+                </tr>
+              </table>
+            </fieldset>
+          </form>
+          <form class="signal">
+            <fieldset>
+              <legend>信令服务</legend>
+              <table>
+                <tr>
+                  <th>地址</th>
+                  <td><input name="addr" placeholder="ws://localhost:8443/signal" required/></td>
+                </tr>
+                <tr>
+                  <th>密令</th>
+                  <td><input name="token" placeholder="token"/></td>
+                </tr>
+              </table>
+            </fieldset>
+          </form>
+          <form class="actor">
+            <fieldset>
+              <legend>遥控服务</legend>
+              <table>
+                <tr>
+                  <th>地址</th>
+                  <td><input name="addr" placeholder="wss://localhost:9242"/></td>
+                </tr>
+                <tr>
+                  <th>密令</th>
+                  <td><input name="token" placeholder="token"/></td>
+                </tr>
+              </table>
+            </fieldset>
+            <table>
               <caption>遥控服务下载</caption>
               <tr>
                 <th>Windows</th>
                 <td><a href="kmactor-windows-amd64.zip" target="_blank">Intel/AMD</a></td>
                 <td><a href="kmactor-windows-arm64.zip" target="_blank">ARM64</a></td>
-							</tr>
+              </tr>
               <tr>
                 <th>Apple</th>
                 <td><a href="kmactor-darwin-amd64.zip" target="_blank">Intel</a></td>
                 <td><a href="kmactor-darwin-arm64.zip" target="_blank">Apple Silicon</a></td>
-							</tr>
+              </tr>
               <tr>
                 <th>Linux</th>
                 <td><a href="kmactor-linux-amd64.zip" target="_blank">Intel/AMD</a></td>
                 <td><a href="kmactor-linux-arm64.zip" target="_blank">ARM64</a></td>
-							</tr>
-          </table>
-				</form>
-			</div>
-		</section>
-		<section id="logging"></section>
-	</article>
-	<script defer src="noscr.js"></script>
-</body>
+              </tr>
+            </table>
+          </form>
+        </div>
+      </section>
+      <section id="logging"></section>
+    </article>
+    <script defer src="noscr.js"></script>
+  </body>
 </html>
