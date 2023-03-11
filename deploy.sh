@@ -191,15 +191,21 @@ wget -q -O localhost.direct.zip https://aka.re/localhost
 unzip -P localhost localhost.direct.zip
 mv localhost.direct.crt cert.pem
 mv localhost.direct.key key.pem
+cp cert.pem key.pem /var/www/noscreen-master
+echo "https://${webdomain}" >repo.txt
 for u in $(wget -q -O - https://api.github.com/repos/whiler/kmactor/releases/latest | grep browser_download_url | sed -E 's/.*"([^"]+)".*/\1/'); do
-	wget -q "${u}"
 	name="$(basename "${u}")"
-	pkg="${name%.exe}"
-	pkg="${pkg%-latest}"
-	if [[ "${name}" == "kmactor-ubuntu-latest" ]]; then
-		pkg="kmactor-linux"
+	pkg="${name}.zip"
+	app=kmactor
+	if [[ "${name}" == *.exe ]]; then
+		pkg="${name%.exe}.zip"
+		app=kmactor.exe
 	fi
-	zip "${pkg}.zip" "${name}" cert.pem key.pem
+	rm -f "${name}" "${pkg}" "${app}"
+	wget -q "${u}"
+	mv "${name}" "${app}"
+	chmod a+x "${app}"
+	zip "${pkg}" "${app}" cert.pem key.pem repo.txt
 	mv "${pkg}.zip" /var/www/noscreen-master
 done
 popd || exit 0
