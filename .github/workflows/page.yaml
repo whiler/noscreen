@@ -20,5 +20,5 @@ jobs:
         REPO: self
         BRANCH: static
         FOLDER: .
+        CLEAR_GLOBS_FILE: ".pageignore"
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CLEAR_GLOBS_FILE: .pageignore

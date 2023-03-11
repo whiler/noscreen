@@ -1,4 +1,5 @@
 .pageignore
+.github/*
 LICENSE
 README.md
 deploy.sh
