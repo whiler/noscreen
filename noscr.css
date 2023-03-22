@@ -6,6 +6,23 @@ table {
   width: 100%;
 }
 
+footer {
+  text-align: center;
+}
+
+footer nav {
+  display: inline-block;
+}
+
+footer nav ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+footer nav ul li {
+  display: inline-block;
+}
+
 .page {
 	min-height: 100vh;
 }

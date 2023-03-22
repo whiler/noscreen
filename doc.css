@@ -1,0 +1,23 @@
+body {
+  font-size: 1.125rem;
+}
+
+body > article {
+  width: 90vw;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media only screen and (min-width: 100em) {
+  body {
+    font-size: 1.25rem;
+  }
+
+  body > article {
+    width: 80vw;
+  }
+}
+
+h2 {
+  text-align: center;
+}
