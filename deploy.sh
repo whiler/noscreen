@@ -188,25 +188,44 @@ apt install -qq -y zip unzip
 tmpd=$(mktemp -d)
 pushd "${tmpd}" || exit 0
 wget -q -O localhost.direct.zip https://aka.re/localhost
-unzip -P localhost localhost.direct.zip
+unzip -P localhost -q localhost.direct.zip
 mv localhost.direct.crt cert.pem
 mv localhost.direct.key key.pem
 cp cert.pem key.pem /var/www/noscreen-master
-echo "https://${webdomain}" >repo.txt
+cat <<EOF >config.json
+{
+	"repo": "https://${webdomain}",
+	"cert": "cert.pem",
+	"key": "key.pem"
+}
+EOF
 for u in $(wget -q -O - https://api.github.com/repos/whiler/kmactor/releases/latest | grep browser_download_url | sed -E 's/.*"([^"]+)".*/\1/'); do
 	name="$(basename "${u}")"
-	pkg="${name}.zip"
-	app=kmactor
-	if [[ "${name}" == *.exe ]]; then
-		pkg="${name%.exe}.zip"
-		app=kmactor.exe
+	if [[ "${name}" == *.app.* ]]; then
+		pkg="${name}"
+		wget -q "${u}"
+		unzip -q "${name}"
+		rm "${name}"
+		cp config.json cert.pem key.pem kmactor.app/Contents/Resources
+		chmod a+x kmactor.app/Contents/MacOS/kmactor
+		zip -q "${pkg}" -r kmactor.app
+		rm -fr kmactor.app
+	else
+		if [[ "${name}" == *-linux-* ]]; then
+			pkg="${name}.zip"
+			app=kmactor
+		elif [[ "${name}" == *-windows-* ]]; then
+			pkg="${name%.exe}.zip"
+			app=kmactor.exe
+		fi
+		rm -f "${pkg}" "${app}"
+		wget -q "${u}"
+		mv "${name}" "${app}"
+		chmod a+x "${app}"
+		zip -q "${pkg}" "${app}" config.json cert.pem key.pem
+		rm "${app}"
 	fi
-	rm -f "${name}" "${pkg}" "${app}"
-	wget -q "${u}"
-	mv "${name}" "${app}"
-	chmod a+x "${app}"
-	zip "${pkg}" "${app}" cert.pem key.pem repo.txt
-	mv "${pkg}.zip" /var/www/noscreen-master
+	mv "${pkg}" /var/www/noscreen-master
 done
 popd || exit 0
 rm -fr "${tmpd}"
